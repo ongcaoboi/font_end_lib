@@ -1,18 +1,36 @@
 function Validation(options) {
   let defaultOptions = {
     errorSelector: '.error-message',
-    classError: 'invalid'
+    classError: 'invalid',
+    formGroupSelector: '.form-group'
+  }
+
+  function getParentElement(element, selector) {
+    while (element.parentElement) {
+      if (element.parentElement.matches(selector)) {
+        return element.parentElement
+      }
+      element = element.parentElement
+    }
+  }
+
+  function getErrorElement(element) {
+    let formGroupElement = getParentElement(element, options.formGroupSelector)
+    return formGroupElement.querySelector(options.errorSelector)
   }
   options = { ...defaultOptions, ...options }
+  let formValues = {}
 
   const formElement = document.querySelector(options.form)
   const queryOne = formElement.querySelector.bind(formElement)
+  const queryAll = formElement.querySelectorAll.bind(formElement)
 
   let selectorRules = {}
 
   let validate = (inputElement, rule) => {
-    let errorElement = inputElement.parentElement.querySelector(options.errorSelector)
-    let errorMessage
+    let formGroupElement = getParentElement(inputElement, options.formGroupSelector)
+    let errorElement = formGroupElement.querySelector(options.errorSelector)
+    let errorMessage = ''
     let rules = selectorRules[rule.selector]
 
     for (let i = 0; i < rules.length; i++) {
@@ -21,10 +39,12 @@ function Validation(options) {
     }
     if (errorMessage) {
       errorElement.innerText = errorMessage
-      errorElement.parentElement.classList.add(options.classError)
+      formGroupElement.classList.add(options.classError)
+      return false
     } else {
       errorElement.innerText = ''
-      errorElement.parentElement.classList.remove(options.classError)
+      formGroupElement.classList.remove(options.classError)
+      return true
     }
   }
 
@@ -37,7 +57,7 @@ function Validation(options) {
         selectorRules[rule.selector] = [rule.test]
       }
 
-      var inputElement = queryOne(rule.selector)
+      let inputElement = queryOne(rule.selector)
 
       if (inputElement) {
 
@@ -46,12 +66,41 @@ function Validation(options) {
         }
 
         inputElement.oninput = () => {
-          validate(inputElement, rule)
+          let formGroupElement = getParentElement(inputElement, options.formGroupSelector)
+          let errorElement = formGroupElement.querySelector(options.errorSelector)
+          errorElement.innerText = ''
+          formGroupElement.classList.remove(options.classError)
         }
       }
     })
-    console.log(selectorRules)
+
+    formElement.onsubmit = (e) => {
+      e.preventDefault()
+
+      let isFormValid = true
+
+      options.rules.forEach((rule) => {
+        let inputElement = queryOne(rule.selector)
+        let isValid = validate(inputElement, rule)
+        if (!isValid) {
+          isFormValid = false
+        }
+      })
+
+      if (isFormValid) {
+        if (typeof (options.onSubmit) === 'function') {
+          let inputElements = queryAll('[name]:not([disabled])')
+          Array.from(inputElements).forEach((input) => {
+            formValues[input.name] = input.value
+          })
+          return options.onSubmit(formValues)
+        } else {
+          formElement.submit()
+        }
+      }
+    }
   }
+
 }
 
 Validation.isRequire = (selector, message) => {
