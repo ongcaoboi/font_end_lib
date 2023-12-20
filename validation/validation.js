@@ -18,6 +18,14 @@ function Validation(options) {
     let formGroupElement = getParentElement(element, options.formGroupSelector)
     return formGroupElement.querySelector(options.errorSelector)
   }
+
+  function regexValidator(value, regex, message) {
+    if (typeof message === 'undefined') {
+      message = 'Invalid format'
+    }
+    return regex.test(value) ? '' : message;
+  }
+
   options = { ...defaultOptions, ...options }
   let formValues = {}
 
@@ -27,16 +35,24 @@ function Validation(options) {
 
   let selectorRules = {}
 
-  let validate = (inputElement, rule) => {
+  let validate = (inputElement, elem) => {
     let formGroupElement = getParentElement(inputElement, options.formGroupSelector)
     let errorElement = formGroupElement.querySelector(options.errorSelector)
     let errorMessage = ''
-    let rules = selectorRules[rule.selector]
+    let rules = selectorRules[elem.selector]
 
     for (let i = 0; i < rules.length; i++) {
-      errorMessage = rules[i](inputElement.value)
-      if (errorMessage) break
+      const rule = rules[i]
+
+      if (rule.regex instanceof RegExp) {
+        errorMessage += regexValidator(inputElement.value, rule.regex, rule.message)
+      }
+
+      if (errorMessage.length === 0 && typeof rule.test === 'function') {
+        errorMessage += rule.test(inputElement.value)
+      }
     }
+
     if (errorMessage) {
       errorElement.innerText = errorMessage
       formGroupElement.classList.add(options.classError)
@@ -51,10 +67,20 @@ function Validation(options) {
   if (formElement) {
     options.rules.forEach(rule => {
 
+      ruleTest = {}
+      if (rule.regex) {
+        ruleTest.regex = rule.regex
+      }
+      if (rule.test) {
+        ruleTest.test = rule.test
+      }
+      if (rule.message) {
+        ruleTest.message = rule.message
+      }
       if (Array.isArray(selectorRules[rule.selector])) {
-        selectorRules[rule.selector].push(rule.test)
+        selectorRules[rule.selector].push(ruleTest)
       } else {
-        selectorRules[rule.selector] = [rule.test]
+        selectorRules[rule.selector] = [ruleTest]
       }
 
       let inputElement = queryOne(rule.selector)
@@ -77,15 +103,26 @@ function Validation(options) {
     formElement.onsubmit = (e) => {
       e.preventDefault()
 
+      let firstInvalidInput = null;
+
       let isFormValid = true
 
       options.rules.forEach((rule) => {
         let inputElement = queryOne(rule.selector)
-        let isValid = validate(inputElement, rule)
+        let isValid = validate(inputElement, rule);
+
+        if (!isValid && !firstInvalidInput) {
+          firstInvalidInput = inputElement;
+        }
+
         if (!isValid) {
           isFormValid = false
         }
       })
+
+      if (!isFormValid && firstInvalidInput) {
+        firstInvalidInput.focus();
+      }
 
       if (isFormValid) {
         if (typeof (options.onSubmit) === 'function') {
@@ -98,25 +135,6 @@ function Validation(options) {
           formElement.submit()
         }
       }
-    }
-  }
-
-}
-
-Validation.isRequire = (selector, message) => {
-  return {
-    selector: selector,
-    test: (value) => {
-      return value.trim() ? undefined : message || "Please enter this field!"
-    }
-  }
-}
-
-Validation.maxLength = (selector, max, message) => {
-  return {
-    selector: selector,
-    test: (value) => {
-      return value.length > max ? undefined : message || `This field max length ${max} charactor!`
     }
   }
 }

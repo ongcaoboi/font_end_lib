@@ -1,0 +1,13 @@
+.form-group {
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+}
+
+.invalid select,
+.invalid input {
+  border: 1px solid red;
+}
