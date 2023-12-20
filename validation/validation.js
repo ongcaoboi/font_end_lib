@@ -19,13 +19,6 @@ function Validation(options) {
     return formGroupElement.querySelector(options.errorSelector)
   }
 
-  function regexValidator(value, regex, message) {
-    if (typeof message === 'undefined') {
-      message = 'Invalid format'
-    }
-    return regex.test(value) ? '' : message;
-  }
-
   options = { ...defaultOptions, ...options }
   let formValues = {}
 
@@ -35,21 +28,99 @@ function Validation(options) {
 
   let selectorRules = {}
 
+  function getValueFromControl(control) {
+    if (control.type === 'checkbox') {
+      const array = []
+      const elements = queryAll(control.selector)
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].checked) {
+          array.push(elements[i].value)
+        }
+      }
+      return {
+        name: elements[0].name,
+        value: array
+      }
+
+    } else if (control.type === 'radio') {
+      const elements = queryAll(control.selector)
+      let value = null;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].checked) {
+          value = elements[i].value
+        }
+      }
+      return {
+        name: elements[0].name,
+        value: value
+      }
+    } else if (control.type === 'file') {
+      const element = queryOne(control.selector)
+      const value = element.files.length > 0 ? element.files : null;
+      return {
+        name: element.name,
+        value: value
+      }
+    } else {
+      const element = queryOne(control.selector)
+      const value = element.value
+      return {
+        name: element.name,
+        value: element.value
+      }
+    }
+  }
+
+  function regexValidator(value, regex, message) {
+    if (typeof message === 'undefined') {
+      message = 'Invalid format'
+    }
+    return regex.test(value) ? '' : message;
+  }
+
+  function addEventBlur(inputElement, rule) {
+    if (inputElement) {
+      inputElement.onblur = () => {
+        validate(inputElement, rule)
+      }
+    }
+  }
+
+  function addEventInput(inputElement) {
+    if (inputElement) {
+      inputElement.oninput = () => {
+        let formGroupElement = getParentElement(inputElement, options.formGroupSelector)
+        let errorElement = formGroupElement.querySelector(options.errorSelector)
+        errorElement.innerText = ''
+        formGroupElement.classList.remove(options.classError)
+      }
+    }
+  }
+
+  function addEventChange(inputElement, rule) {
+    if (inputElement) {
+      inputElement.addEventListener('change', () => {
+        validate(inputElement, rule);
+      });
+    }
+  }
+
   let validate = (inputElement, elem) => {
     let formGroupElement = getParentElement(inputElement, options.formGroupSelector)
     let errorElement = formGroupElement.querySelector(options.errorSelector)
     let errorMessage = ''
     let rules = selectorRules[elem.selector]
+    let valueElm = getValueFromControl(elem).value
 
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i]
 
       if (rule.regex instanceof RegExp) {
-        errorMessage += regexValidator(inputElement.value, rule.regex, rule.message)
+        errorMessage += regexValidator(valueElm, rule.regex, rule.message)
       }
 
       if (errorMessage.length === 0 && typeof rule.test === 'function') {
-        errorMessage += rule.test(inputElement.value)
+        errorMessage += rule.test(valueElm)
       }
     }
 
@@ -83,19 +154,27 @@ function Validation(options) {
         selectorRules[rule.selector] = [ruleTest]
       }
 
-      let inputElement = queryOne(rule.selector)
-
-      if (inputElement) {
-
-        inputElement.onblur = () => {
-          validate(inputElement, rule)
+      switch (rule.type) {
+        case 'radio':
+        case 'checkbox': {
+          const elements = queryAll(rule.selector)
+          for (let i = 0; i < elements.length; i++) {
+            addEventInput(elements[i])
+            addEventChange(elements[i], rule)
+          }
+          break
         }
+        case 'file': {
+          let inputElement = queryOne(rule.selector)
+          addEventInput(inputElement)
+          addEventChange(inputElement, rule)
 
-        inputElement.oninput = () => {
-          let formGroupElement = getParentElement(inputElement, options.formGroupSelector)
-          let errorElement = formGroupElement.querySelector(options.errorSelector)
-          errorElement.innerText = ''
-          formGroupElement.classList.remove(options.classError)
+          break
+        }
+        default: {
+          let inputElement = queryOne(rule.selector)
+          addEventBlur(inputElement, rule)
+          addEventInput(inputElement)
         }
       }
     })
@@ -108,13 +187,38 @@ function Validation(options) {
       let isFormValid = true
 
       options.rules.forEach((rule) => {
-        let inputElement = queryOne(rule.selector)
-        let isValid = validate(inputElement, rule);
+        let isValid = false
+        switch (rule.type) {
+          case 'radio':
+          case 'checkbox': {
+            const elements = queryAll(rule.selector)
+            for (let i = 0; i < elements.length; i++) {
+              isValid = validate(elements[i], rule);
 
-        if (!isValid && !firstInvalidInput) {
-          firstInvalidInput = inputElement;
+              if (!isValid && !firstInvalidInput) {
+                firstInvalidInput = elements[i];
+              }
+            }
+            break
+          }
+          case 'file': {
+            let inputElement = queryOne(rule.selector)
+            isValid = validate(inputElement, rule);
+
+            if (!isValid && !firstInvalidInput) {
+              firstInvalidInput = inputElement;
+            }
+            break
+          }
+          default: {
+            let inputElement = queryOne(rule.selector)
+            isValid = validate(inputElement, rule);
+
+            if (!isValid && !firstInvalidInput) {
+              firstInvalidInput = inputElement;
+            }
+          }
         }
-
         if (!isValid) {
           isFormValid = false
         }
@@ -126,9 +230,10 @@ function Validation(options) {
 
       if (isFormValid) {
         if (typeof (options.onSubmit) === 'function') {
-          let inputElements = queryAll('[name]:not([disabled])')
-          Array.from(inputElements).forEach((input) => {
-            formValues[input.name] = input.value
+          const formValues = {}
+          options.rules.forEach((rule) => {
+            const { name, value } = getValueFromControl(rule)
+            formValues[name] = value
           })
           return options.onSubmit(formValues)
         } else {

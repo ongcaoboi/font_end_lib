@@ -17,16 +17,43 @@
       <input type="text" name="username" id="username">
       <div class="error-message"></div>
     </div>
+
+    <div class="form-group">
+      <label>Gender:</label>
+      <label><input type="radio" name="gender" value="male"> Male</label>
+      <label><input type="radio" name="gender" value="female"> Female</label>
+      <div class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Favious:</label>
+      <label><input type="checkbox" name="favious" value="music"> Music</label>
+      <label><input type="checkbox" name="favious" value="game"> Game</label>
+      <div class="error-message"></div>
+    </div>
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" name="email" id="email">
+      <div class="error-message"></div>
+    </div>
+
     <div class="form-group">
       <label for="password">Password:</label>
       <input type="password" name="password" id="password">
       <div class="error-message"></div>
     </div>
+
     <div class="form-group">
-      <label for="email">Email:</label>
-      <input type="text" name="email" id="email">
+      <label for="avatar">Avatar:</label>
+      <input type="file" name="avatar" id="avatar">
       <div class="error-message"></div>
     </div>
+
+    <div class="form-group">
+      <label><input type="checkbox" name="terms" id="terms"> I agree to the terms</label>
+      <div class="error-message"></div>
+    </div>
+
     <button type="submit">Submit</button>
   </form>
 
@@ -43,28 +70,50 @@
         test: (value) => {
           return value.trim() !== '' ? '' : 'Username cannot be empty';
         },
+        type: 'input'
+      },
+      {
+        selector: '[name="gender"]',
+        test: (value) => {
+          return value ? '' : 'Please select a gender';
+        },
+        type: 'radio'
+      },
+      {
+        selector: '[name="favious"]',
+        test: (value) => {
+          return value.length > 0 ? '' : 'Please select a favious';
+        },
+        type: 'checkbox'
+      },
+      {
+        selector: '[name="email"]',
+        test: (value) => (value.length > 0 ? '' : 'Email cannot be empty'),
+        regex: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/,
+        type: 'input'
       },
       {
         selector: '[name="password"]',
         test: (value) => {
           return value.length >= 6 ? '' : 'Password must be at least 6 characters';
         },
+        type: 'input'
       },
       {
-        selector: '[name="password"]',
+        selector: '[name="avatar"]',
         test: (value) => {
-          return value.length <= 10 ? '' : 'Password must be at max 10 characters';
+          return value ? '' : 'Please upload an avatar';
         },
+        type: 'file'
       },
       {
-        selector: '[name="email"]',
+        selector: '[name="terms"]',
         test: (value) => {
-          return 'False'
+          return value.length > 0 ? '' : 'You must agree to the terms';
         },
-        regex: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/,
-        message: 'Email invalid'
+        type: 'checkbox'
       },
-      // Add more validation rules for other fields if needed, including regex
+      // Add more validation rules for other fields if needed
     ],
     onSubmit: (formValues) => {
       console.log('Form submitted with values:', formValues);
