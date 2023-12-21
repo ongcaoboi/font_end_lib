@@ -12,46 +12,57 @@
 
 <body>
   <form id="myForm">
-    <div class="form-group">
+    <div class="fg-validate">
       <label for="username">Username:</label>
       <input type="text" name="username" id="username">
-      <div class="error-message"></div>
+      <div class="fg-error-mg-validate"></div>
     </div>
 
-    <div class="form-group">
+    <div class="fg-validate">
       <label>Gender:</label>
       <label><input type="radio" name="gender" value="male"> Male</label>
       <label><input type="radio" name="gender" value="female"> Female</label>
-      <div class="error-message"></div>
+      <div class="fg-error-mg-validate"></div>
     </div>
 
-    <div class="form-group">
+    <div class="fg-validate">
       <label>Favious:</label>
       <label><input type="checkbox" name="favious" value="music"> Music</label>
       <label><input type="checkbox" name="favious" value="game"> Game</label>
-      <div class="error-message"></div>
+      <div class="fg-error-mg-validate"></div>
     </div>
-    <div class="form-group">
+    <div class="fg-validate">
       <label for="email">Email:</label>
       <input type="email" name="email" id="email">
-      <div class="error-message"></div>
+      <div class="fg-error-mg-validate"></div>
     </div>
 
-    <div class="form-group">
+    <div class="fg-validate">
       <label for="password">Password:</label>
       <input type="password" name="password" id="password">
-      <div class="error-message"></div>
+      <div class="fg-error-mg-validate"></div>
     </div>
 
-    <div class="form-group">
+    <div class="fg-validate">
       <label for="avatar">Avatar:</label>
       <input type="file" name="avatar" id="avatar">
-      <div class="error-message"></div>
+      <div class="fg-error-mg-validate"></div>
     </div>
 
-    <div class="form-group">
+    <div class="fg-validate">
+      <label>Language</label>
+      <select name="language" id="language">
+        <option value=""></option>
+        <option value="vn">Viet Nam</option>
+        <option value="cn">Chine</option>
+        <option value="us">US</option>
+      </select>
+      <div class="fg-error-mg-validate"></div>
+    </div>
+
+    <div class="fg-validate">
       <label><input type="checkbox" name="terms" id="terms"> I agree to the terms</label>
-      <div class="error-message"></div>
+      <div class="fg-error-mg-validate"></div>
     </div>
 
     <button type="submit">Submit</button>
@@ -105,6 +116,13 @@
           return value ? '' : 'Please upload an avatar';
         },
         type: 'file'
+      },
+      {
+        selector: '[name="language"]',
+        test: (value) => {
+          return value ? '' : 'Please upload an avatar';
+        },
+        type: 'select'
       },
       {
         selector: '[name="terms"]',

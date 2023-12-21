@@ -1,13 +1,18 @@
-.form-group {
-  margin-bottom: 20px;
+:root {
+  --text-danger: red;
 }
 
-.error-message {
-  color: red;
-  font-size: 14px;
+.fg-validate .fg-error-mg-validate {
+  color: var(--text-danger);
 }
 
-.invalid select,
-.invalid input {
-  border: 1px solid red;
+.fg-invalid-validate select,
+.fg-invalid-validate input {
+  border: 1px solid var(--text-danger) !important;
+}
+
+.fg-invalid-validate select:focus,
+.fg-invalid-validate input:focus {
+  border-color: var(--text-danger) !important;
+  box-shadow: inset 0 0 0 1px var(--text-danger) !important;
 }
