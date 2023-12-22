@@ -31,6 +31,9 @@ function Validation(options) {
     if (control.type === 'checkbox') {
       const array = [];
       const elements = queryAll(control.selector);
+      if (elements.length === 0) {
+        return {};
+      }
       for (let i = 0; i < elements.length; i++) {
         if (elements[i].checked) {
           array.push(elements[i].value);
@@ -43,6 +46,9 @@ function Validation(options) {
 
     } else if (control.type === 'radio') {
       const elements = queryAll(control.selector);
+      if (elements.length === 0) {
+        return {};
+      }
       let value = null;
       for (let i = 0; i < elements.length; i++) {
         if (elements[i].checked) {
@@ -55,6 +61,9 @@ function Validation(options) {
       }
     } else if (control.type === 'file') {
       const element = queryOne(control.selector);
+      if (!element) {
+        return {};
+      }
       const value = element.files.length > 0 ? element.files : null;
       return {
         name: element.name,
@@ -62,7 +71,9 @@ function Validation(options) {
       }
     } else if (control.type === 'select') {
       const element = queryOne(control.selector);
-      console.log({element}, element.value);
+      if (!element) {
+        return {};
+      }
       const value = element.value;
       return {
         name: element.name,
@@ -70,7 +81,9 @@ function Validation(options) {
       }
     } else {
       const element = queryOne(control.selector);
-      const value = element.value;
+      if (!element) {
+        return {};
+      }
       return {
         name: element.name,
         value: element.value
@@ -114,6 +127,9 @@ function Validation(options) {
 
   let validate = (inputElement, elem) => {
     let formGroupElement = getParentElement(inputElement, options.formGroupSelector);
+    if (!formGroupElement) {
+      return true;
+    }
     let errorElement = formGroupElement.querySelector(options.errorSelector);
     let errorMessage = '';
     let rules = selectorRules[elem.selector];
@@ -222,19 +238,25 @@ function Validation(options) {
                 firstInvalidInput = elements[i];
               }
             }
-            break
+            break;
           }
           case 'file': {
             let inputElement = queryOne(rule.selector);
+            if (!inputElement) {
+              return;
+            }
             isValid = validate(inputElement, rule);
 
             if (!isValid && !firstInvalidInput) {
               firstInvalidInput = inputElement;
             }
-            break
+            break;
           }
           default: {
             let inputElement = queryOne(rule.selector);
+            if (!inputElement) {
+              return;
+            }
             isValid = validate(inputElement, rule);
 
             if (!isValid && !firstInvalidInput) {
@@ -256,7 +278,9 @@ function Validation(options) {
           const formValues = {};
           options.rules.forEach((rule) => {
             const { name, value } = getValueFromControl(rule);
-            formValues[name] = value;
+            if (name) {
+              formValues[name] = value;
+            }
           })
           return options.onSubmit(formValues);
         } else {

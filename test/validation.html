@@ -37,11 +37,11 @@
       <div class="fg-error-mg-validate"></div>
     </div>
 
-    <div class="fg-validate">
+    <!-- <div class="fg-validate">
       <label for="password">Password:</label>
       <input type="password" name="password" id="password">
       <div class="fg-error-mg-validate"></div>
-    </div>
+    </div> -->
 
     <div class="fg-validate">
       <label for="avatar">Avatar:</label>
@@ -77,11 +77,7 @@
     form: '#myForm',
     rules: [
       {
-        selector: '[name="username"]',
-        test: (value) => {
-          return value.trim() !== '' ? '' : 'Username cannot be empty';
-        },
-        type: 'input'
+        selector: '[name="username"]'
       },
       {
         selector: '[name="gender"]',
